@@ -1,14 +1,12 @@
 {
-  "name": "telegram-cricket-bot",
+  "name": "telegram-music-bot",
   "version": "1.0.0",
-  "description": "Telegram Cricket Live Score Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
-    "node-fetch": "^2.6.7",
-    "dotenv": "^16.4.0"
+    "node-fetch": "^2.6.7"
   }
 }
