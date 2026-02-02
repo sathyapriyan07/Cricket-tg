@@ -1,67 +1,70 @@
-require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const fetch = require("node-fetch");
 
-// ENV VARIABLES
 const token = process.env.BOT_TOKEN;
-const API_KEY = process.env.CRIC_API_KEY;
-
-// CREATE BOT
 const bot = new TelegramBot(token, { polling: true });
 
 bot.onText(/\/start/, (msg) => {
   bot.sendMessage(
     msg.chat.id,
-    "🏏 Welcome to Cricket Bot!\n\nCommands:\n/live - Live Matches\n/player name - Player Info"
+    "🎵 Music Bot Ready!\n\nCommands:\n/song name\n/artist name"
   );
 });
 
-// LIVE MATCHES
-bot.onText(/\/live/, async (msg) => {
+// SONG SEARCH
+bot.onText(/\/song (.+)/, async (msg, match) => {
+  const query = match[1];
+
   try {
     const res = await fetch(
-      `https://api.cricketdata.org/v1/matches?apikey=${API_KEY}`
+      `https://api.deezer.com/search?q=${query}`
     );
     const data = await res.json();
 
-    if (!data.data || data.data.length === 0) {
-      bot.sendMessage(msg.chat.id, "No live matches now.");
+    if (!data.data.length) {
+      bot.sendMessage(msg.chat.id, "Song not found.");
       return;
     }
 
-    let reply = "🔥 Live Matches:\n\n";
-    data.data.slice(0, 5).forEach((m) => {
-      reply += `${m.name}\nStatus: ${m.status}\n\n`;
+    const song = data.data[0];
+
+    bot.sendPhoto(msg.chat.id, song.album.cover_big, {
+      caption:
+        `🎶 ${song.title}\n` +
+        `👤 ${song.artist.name}\n` +
+        `💿 ${song.album.title}\n` +
+        `🔗 Preview: ${song.preview}`
     });
-
-    bot.sendMessage(msg.chat.id, reply);
   } catch (err) {
-    bot.sendMessage(msg.chat.id, "Error fetching live scores.");
+    bot.sendMessage(msg.chat.id, "Error fetching music.");
   }
 });
 
-// PLAYER SEARCH
-bot.onText(/\/player (.+)/, async (msg, match) => {
-  const name = match[1];
+// ARTIST SEARCH
+bot.onText(/\/artist (.+)/, async (msg, match) => {
+  const query = match[1];
 
   try {
     const res = await fetch(
-      `https://api.cricketdata.org/v1/players?apikey=${API_KEY}&search=${name}`
+      `https://api.deezer.com/search/artist?q=${query}`
     );
     const data = await res.json();
 
-    if (!data.data || data.data.length === 0) {
-      bot.sendMessage(msg.chat.id, "Player not found.");
+    if (!data.data.length) {
+      bot.sendMessage(msg.chat.id, "Artist not found.");
       return;
     }
 
-    const p = data.data[0];
-    const reply = `👤 ${p.name}\nCountry: ${p.country}\nRole: ${p.role}`;
+    const artist = data.data[0];
 
-    bot.sendMessage(msg.chat.id, reply);
+    bot.sendPhoto(msg.chat.id, artist.picture_big, {
+      caption:
+        `🎤 ${artist.name}\n` +
+        `Fans: ${artist.nb_fan}`
+    });
   } catch (err) {
-    bot.sendMessage(msg.chat.id, "Error fetching player data.");
+    bot.sendMessage(msg.chat.id, "Error fetching artist.");
   }
 });
 
-console.log("Bot Running...");
+console.log("Music Bot Running...");
